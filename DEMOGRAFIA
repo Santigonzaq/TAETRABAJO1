@@ -1,0 +1,512 @@
+0/nrow(DAT_BARRIOS) # % PROBLEMA CON 10
+DAT_BARRIOS_10<-DAT_BARRIOS[,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_10")]
+TABLA_10<-round(100*as.matrix(table(DAT_BARRIOS_10))/rowSums(as.matrix(table(DAT_BARRIOS_10))),2)
+# PREGUNTA 87:
+length(Problem2)/nrow(DAT_BARRIOS) # % PROBLEMA CON 87
+DAT_BARRIOS_87<-DAT_BARRIOS[-Problem2,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_87")]
+RESUM_87<-DAT_BARRIOS_87 %>% group_by(encuesta_calidad.barrio) %>% summarise(Median_ingresos=round(median(encuesta_calidad.p_87)),2)
+class(RESUM_87)
+RESUM_87$Median_ingresos
+# PREGUNTA 146:
+0/nrow(DAT_BARRIOS) # % PROBLEMA CON 146
+DAT_BARRIOS_146<-DAT_BARRIOS[,c("encuesta_calidad.barrio",
+"encuesta_calidad.p_146")]
+TABLA_146<-round(100*as.matrix(table(DAT_BARRIOS_146))/rowSums(as.matrix(table(DAT_BARRIOS_146))),2)
+# PREGUNTA 12:
+0/nrow(DAT_BARRIOS) # % PROBLEMA CON 12
+DAT_BARRIOS_12<-DAT_BARRIOS[,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_12")]
+RESUM_12<-DAT_BARRIOS_12 %>% group_by(encuesta_calidad.barrio) %>% summarise(Median_personas=median(encuesta_calidad.p_12))
+class(RESUM_12)
+RESUM_12$Median_personas
+#PREGUNTA 232:
+length(Problem5)/nrow(DAT_BARRIOS) # % PROBLEMA CON 232
+DAT_BARRIOS_232<-DAT_BARRIOS[-Problem5,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_232")]
+RESUM_232<-DAT_BARRIOS_232 %>% group_by(encuesta_calidad.barrio) %>% summarise(Median_egresos=median(encuesta_calidad.p_232))
+class(RESUM_232)
+RESUM_232$Median_egresos
+# PREGUNTA 15:
+0/nrow(DAT_BARRIOS) # % PROBLEMA CON 15
+DAT_BARRIOS_15<-DAT_BARRIOS[,c("encuesta_calidad.barrio",
+"encuesta_calidad.p_15")]
+TABLA_15<-round(100*as.matrix(table(DAT_BARRIOS_15))/rowSums(as.matrix(table(DAT_BARRIOS_15))),2)
+# PREGUNTA 20:
+length(Problem7)/nrow(DAT_BARRIOS) # % PROBLEMA CON 20
+DAT_BARRIOS_20<-DAT_BARRIOS[-Problem7,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_20")]
+TABLA_20<-round(100*as.matrix(table(DAT_BARRIOS_20))/rowSums(as.matrix(table(DAT_BARRIOS_20))),2)
+# PREGUNTA 23:
+length(Problem8)/nrow(DAT_BARRIOS) # % PROBLEMA CON 23
+DAT_BARRIOS_23<-DAT_BARRIOS[-Problem8,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_23")]
+TABLA_23<-round(100*as.matrix(table(DAT_BARRIOS_23))/rowSums(as.matrix(table(DAT_BARRIOS_23))),2)
+BARRIOS1<-row.names(as.matrix(summary(DAT_BARRIOS$encuesta_calidad.barrio,
+maxsum=100000)))
+TOTAL_ENC<-as.vector(summary(DAT_BARRIOS$encuesta_calidad.barrio,
+maxsum=100000))
+DEMOGRAFIA<-data.frame(BARRIOS1,TOTAL_ENC,P.10.1=TABLA_10[,1], P.10.2=TABLA_10[,2], P.10.3=TABLA_10[,3], P.10.4=TABLA_10[,4],
+P.10.5=TABLA_10[,5],P.10.6=TABLA_10[,6], P.87=RESUM_87[,2], P.146.1=TABLA_146[,1],  P.146.2=TABLA_146[,2],
+P.146.3=TABLA_146[,3], P.146.4=TABLA_146[,4], P.146.5=TABLA_146[,5], P.232=RESUM_232[,2], p.12=RESUM_12[,2],
+P.15.1=TABLA_15[,1], P.15.2=TABLA_15[,2], P.20.1=TABLA_20[,2], P.20.2=TABLA_20[,3], P.20.3=TABLA_20[,4],
+P.20.4=TABLA_20[,5], P.20.5=TABLA_20[,6], P.20.6=TABLA_20[,7], P.23.1=TABLA_23[,3], P.23.2=TABLA_23[,4],
+P.23.3=TABLA_23[,5], P.23.4=TABLA_23[,6], P.23.5=TABLA_23[,7], P.23.6=TABLA_23[,8])
+require(readr)
+require(tidyr)
+require(ggplot2)
+dat_scal <- scale(DEMOGRAFIA[,3:30])
+dat_dist=dist(dat_scal)
+dat_clust=hclust(dat_dist,method="single")
+plot(dat_clust)
+library(FactoClass)
+library(ggplot2)
+library(factoextra)
+fviz_nbclust(x = na.omit(dat_scal),FUNcluster = kmeans, method = "silhouette") ## metodo del codo
+fviz_nbclust(x= na.omit(dat_scal), FUNcluster=kmeans, method = c("silhouette", "wss", "gap_stat"))
+library(NbClust)
+NbClust(data = dat_scal, diss = NULL, distance = "euclidean",
+min.nc = 2, max.nc = 15, method = "kmeans")
+plot(dat_clust)
+rect.hclust(dat_clust,k=2)
+## despues de tener el k optimo que fue k=2, calculo kmeans
+set.seed(2020)
+km.res <- kmeans(na.omit(dat_scal), centers=2, nstart = 1)
+## grafico final de clusters
+fviz_cluster(km.res, na.omit(DEMOGRAFIA[,3:30]))
+## agregar una variable nueva con los grupos
+datosC <- data.frame(cbind(na.omit(DEMOGRAFIA), cluster = km.res$cluster))
+grupo1 <- datosC[datosC$cluster==1,]
+grupo2 <- datosC[datosC$cluster==2,]
+for(i in 1: nrow(datosC)){
+if(datosC$cluster[i]==1){datosC$COLOR[i] <- "#B562E9"}
+if(datosC$cluster[i]==2){datosC$COLOR[i] <- "#47B1FF"}}
+DATOS <- data.frame(datosC[,c(1,31,32)])
+names(DATOS)[1]="NOMBRE"
+DATOS[1:3,]
+DATOS$NOMBRE <- chartr('ÁÉÍÓÚ','AEIOU', DATOS$NOMBRE)
+DATOS[1:3,]
+library(ggplot2)
+library(rgdal)
+library(sp)
+library(leaflet)
+setwd("C:/Users/susana/Downloads/medellin")
+unzip("C:/Users/susana/Downloads/medellin/Barrio_Vereda.zip")
+barrios_med=readOGR(dsn = "C:/Users/susana/Downloads/medellin", layer = "Barrio_Vereda" )
+print(barrios_med@data$NOMBRE)
+nombres_barrios<-iconv(barrios_med@data$NOMBRE,"UTF-8","ISO_8859-1")
+print(nombres_barrios)
+nombres_barrios=iconv(barrios_med@data$NOMBRE,"UTF-8","ISO_8859-1")
+library(stringr)
+barrios_med@data$NOMBRE  <- str_to_upper(nombres_barrios, locale = "es")
+barrios_med@data$NOMBRE <- chartr('ÁÉÍÓÚ','AEIOU', barrios_med@data$NOMBRE)
+library(dplyr)
+#barrios_med@data$NOMBRE <- arrange(barrios_med@data, NOMBRE)
+DATOS <- arrange(DATOS, NOMBRE)
+DATOS$NOMBRE[DATOS$NOMBRE=="ALTAVISTA CENTRAL"]<- "ALTAVISTA SECTOR CENTRAL"
+DATOS$NOMBRE[DATOS$NOMBRE=="AREA DE EXPANCION SAN CRISTOBAL"]<- "AREA DE EXPANSION SAN CRISTOBAL"
+DATOS$NOMBRE[DATOS$NOMBRE=="AURES Nº 1"]<- "AURES NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="AURES Nº 2"]<- "AURES NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="BARRIO CAYCEDO"]<- "BARRIO CAICEDO"
+DATOS$NOMBRE[DATOS$NOMBRE=="BASILIA"]<- "BRASILIA"
+DATOS$NOMBRE[DATOS$NOMBRE=="BOMBONA Nº 1"]<- "BOMBONA NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="CALAZANS PARTE ALTA"]<- "CALASANZ PARTE ALTA"
+DATOS$NOMBRE[DATOS$NOMBRE=="CAMPO VALDES Nº 1"]<- "CAMPO VALDES NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="CARLOS E RESTREPO"]<- "CARLOS E. RESTREPO"
+DATOS$NOMBRE[DATOS$NOMBRE=="LA ASOMADERA Nº 1"]<- "ASOMADERA NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="MANRIQUE CENTRAL Nº 1"]<- "MANRIQUE CENTRAL NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="PROGRESO"]<- "EL PROGRESO"
+DATOS$NOMBRE[DATOS$NOMBRE=="SAN JAVIER Nº 1"]<- "SAN JAVIER NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="SAN JAVIER Nº 2"]<- "SAN JAVIER NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="JUAN XXIII - LA QUIEBRA"]<- "JUAN XXIII LA QUIEBRA"
+DATOS$NOMBRE[DATOS$NOMBRE=="LA ESPERANZA Nº 2"]<- "LA ESPERANZA NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="MARIA CANO - CARAMBOLAS"]<- "MARIA CANO-CARAMBOLAS"
+DATOS$NOMBRE[DATOS$NOMBRE=="CAMPO VALDES Nº 2"]<- "CAMPO VALDES NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="DOCE DE OCTUBRE Nº 1"]<- "DOCE DE OCTUBRE NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="DOCE DE OCTUBRE Nº 2"]<- "DOCE DE OCTUBRE NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="EL DIAMANTE Nº 2"]<- "EL DIAMANTE NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="EL NOGAL - LOS ALMENDROS"]<- "EL NOGAL-LOS ALMENDROS"
+DATOS$NOMBRE[DATOS$NOMBRE=="EL PLAYON DE LOS COMUNEROS"]<- "PLAYON DE LOS COMUNEROS"
+DATOS$NOMBRE[DATOS$NOMBRE=="EL SOCORRO / LA GABRIELA"]<- "EL SOCORRO"
+DATOS$NOMBRE[DATOS$NOMBRE=="LA ASOMADERA Nº 2"]<- "ASOMADERA NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="LA ASOMADERA Nº 3"]<- "ASOMADERA NO.3"
+DATOS$NOMBRE[DATOS$NOMBRE=="LAS LOMAS Nº 1"]<- "LAS LOMAS NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="LAS LOMAS Nº 2"]<- "LAS LOMAS NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="LOS BALSOS Nº 1"]<- "LOS BALSOS NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="LOS BALSOS Nº 2"]<- "LOS BALSOS NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="MANRIQUE CENTRAL Nº 2"]<- "MANRIQUE CENTRAL NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="MOSCU Nº 1"]<- "MOSCU NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="MOSCU Nº 2"]<- "MOSCU NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="SAN JOSELA CIMA Nº 1"]<- "SAN JOSE LA CIMA NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="SAN JOSE LA CIMA Nº 2"]<- "SAN JOSE LA CIMA NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="SANTO DOMINGO SABIO Nº 1"]<- "SANTO DOMINGO SAVIO NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="SANTO DOMINGO SABIO Nº 2"]<- "SANTO DOMINGO SAVIO NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="VERSALLES Nº 1"]<- "VERSALLES NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="VERSALLES Nº 2"]<- "VERSALLES NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="BARRIO FACULTAD DE MINAS"]<- "FACULTAD DE MINAS"
+DATOS$NOMBRE[DATOS$NOMBRE=="BERMEJAL- LOS ALAMOS"]<- "BERMEJAL-LOS ALAMOS"
+DATOS$NOMBRE[DATOS$NOMBRE=="BOMBONA Nº 2"]<- "BOMBONA NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="CABECERA SAN ANT DE PR."]<- "SAN ANTONIO DE PRADO"
+DATOS$NOMBRE[DATOS$NOMBRE=="CERRO EL VOLADOR"]<- "B. CERRO EL VOLADOR"
+DATOS$NOMBRE[DATOS$NOMBRE=="CORREGIMIENTO PALMITAS"]<- "PALMITAS SECTOR CENTRAL"
+DATOS$NOMBRE[DATOS$NOMBRE=="NUEVA VILLA DE ABURRA"]<- "NUEVA VILLA DEL ABURRA"
+DATOS$NOMBRE[DATOS$NOMBRE=="EL YOLOMBO"]<- "YOLOMBO"
+DATOS$NOMBRE[DATOS$NOMBRE=="VILLA TINA"]<- "VILLATINA"
+DATOS$NOMBRE[DATOS$NOMBRE=="VILLA LILIAM"]<- "VILLA LILLIAM"
+DATOS$NOMBRE[DATOS$NOMBRE=="CABECERA SAN CRISTOBAL"]<- "CABECERA URBANA CORREGIMIENTO SAN CRISTOBAL"
+DATOS$NOMBRE[DATOS$NOMBRE=="MIRA FLORES"]<- "MIRAFLORES"
+dim(merge(x = DATOS, y = barrios_med@data , by = "NOMBRE"))
+barrios_med@data$COLOR<-rep("white",332)
+for (i in 1:332) {
+for (j in 1:299) {
+if(barrios_med@data$NOMBRE[i]==DATOS$NOMBRE[j]){
+barrios_med@data$COLOR[i] <- DATOS$COLOR[j]
+}
+}
+}
+#------------------------- CREACION DEL MAPA ---------------------
+library(rgdal)
+library(leaflet)
+m=leaflet(barrios_med)
+m=addTiles(m)
+m
+m=addPolygons(m,popup=nombres_barrios,color=barrios_med@data$COLOR)
+m
+GRUPO_1<-data.frame(P.10.1=(grupo1$P.10.1)*(-1), P.10.2=(grupo1$P.10.2)*(-1), P.10.3=grupo1$P.10.3, P.10.4=grupo1$P.10.4,
+P.10.5=grupo1$P.10.5,P.10.6=grupo1$P.10.6, P.87=scale(grupo1$Median_ingresos), P.146.1=(grupo1$P.146.1)*(-1),
+P.146.2=(grupo1$P.146.2)*(-1), P.146.3=(grupo1$P.146.3)*(-1), P.146.4=grupo1$P.146.4, P.146.5=grupo1$P.146.5,
+P.232=scale(grupo1$Median_egresos), p.12=scale(grupo1$Median_personas), P.15.1=grupo1$P.15.1, P.15.2=grupo1$P.15.2,
+P.20.1=grupo1$P.20.1, P.20.2=grupo1$P.20.2, P.20.3=grupo1$P.20.3, P.20.4=grupo1$P.20.4,
+P.20.5=grupo1$P.20.5, P.20.6=grupo1$P.20.6, P.23.1=grupo1$P.23.1, P.23.2=grupo1$P.23.2,
+P.23.3=grupo1$P.23.3, P.23.4=grupo1$P.23.4, P.23.5=grupo1$P.23.5, P.23.6=grupo1$P.23.6)
+apply(GRUPO_1,2,mean)
+sum(apply(GRUPO_1,2,mean))/31
+m=leaflet(barrios_med)
+m=addTiles(m)
+m
+NbClust(data = dat_scal, diss = NULL, distance = "euclidean",
+min.nc = 1, max.nc = 10, method = "kmeans")
+require(readr)
+require(tidyr)
+require(ggplot2)
+library(FactoClass)
+library(ggplot2)
+library(factoextra)
+library(NbClust)
+NbClust(data = dat_scal, diss = NULL, distance = "euclidean",
+min.nc = 1, max.nc = 10, method = "kmeans")
+NbClust(data = dat_scal, diss = NULL, distance = "euclidean",
+min.nc = 2, max.nc = 10, method = "kmeans")
+NbClust(data = na.omit(dat_scal), diss = NULL, distance = "euclidean",
+min.nc = 2, max.nc = 10, method = "kmeans")
+NbClust(data = na.omit(dat_scal), diss = NULL, distance = "euclidean",
+min.nc = 2, max.nc = 10, method = "kmeans")
+load("C:/Users/Susana/Desktop/TAE/CAL_VID_2019.RData ")
+vars<-c("encuesta_calidad.barrio",
+"encuesta_calidad.p_10",
+"encuesta_calidad.p_87",
+"encuesta_calidad.p_146",
+"encuesta_calidad.p_12",
+"encuesta_calidad.p_232",
+"encuesta_calidad.p_15",
+"encuesta_calidad.p_20",
+"encuesta_calidad.p_23")
+DAT_BARRIOS<-CAL_VID_2019[,vars]
+names(DAT_BARRIOS)
+dim(DAT_BARRIOS)
+head(DAT_BARRIOS)
+str(DAT_BARRIOS)
+DAT_BARRIOS$encuesta_calidad.p_10 <- as.factor(DAT_BARRIOS$encuesta_calidad.p_10)
+DAT_BARRIOS$encuesta_calidad.p_15 <- as.factor(DAT_BARRIOS$encuesta_calidad.p_15)
+DAT_BARRIOS$encuesta_calidad.p_20 <- as.factor(DAT_BARRIOS$encuesta_calidad.p_20)
+DAT_BARRIOS$encuesta_calidad.p_23 <- as.factor(DAT_BARRIOS$encuesta_calidad.p_23)
+DAT_BARRIOS$encuesta_calidad.p_146 <- as.factor(DAT_BARRIOS$encuesta_calidad.p_146)
+levels(DAT_BARRIOS$encuesta_calidad.p_10)
+levels(DAT_BARRIOS$encuesta_calidad.p_12)
+require(editrules)
+Cond1<-editset(c("encuesta_calidad.p_87>0",
+"encuesta_calidad.p_232>0",
+"encuesta_calidad.p_12>0",
+"encuesta_calidad.p_10 %in% c('1','2','3','4','5','6')",
+"encuesta_calidad.p_146 %in% c('1','2','3','4','5')",
+"encuesta_calidad.p_15%in% c('1','2')",
+"encuesta_calidad.p_20%in% c('1','2','3','4','5','6')",
+"encuesta_calidad.p_23%in% c('1','2','3','4','5','6')"
+))
+Errores1<-violatedEdits(c(Cond1), DAT_BARRIOS)
+plot(Errores1)
+Locali1<-localizeErrors(Cond1,DAT_BARRIOS)$adapt
+apply(X=Locali1, MARGIN = 2, FUN=function(x)
+which(x==TRUE))
+###########  IDENTIFICANDO LOS PROBLEMAS INDIVIDUALMENTE ############
+Problem1<-apply(X=Locali1, MARGIN = 2,
+FUN=function(x)
+which(x==TRUE))$encuesta_calidad.p_10
+Problem2<-apply(X=Locali1, MARGIN = 2,
+FUN=function(x)
+which(x==TRUE))$encuesta_calidad.p_87
+Problem3<-apply(X=Locali1, MARGIN = 2,
+FUN=function(x)
+which(x==TRUE))$encuesta_calidad.p_146
+Problem4<-apply(X=Locali1, MARGIN = 2,
+FUN=function(x)
+which(x==TRUE))$encuesta_calidad.p_12
+Problem5<-apply(X=Locali1, MARGIN = 2,
+FUN=function(x)
+which(x==TRUE))$encuesta_calidad.p_232
+Problem6<-apply(X=Locali1, MARGIN = 2,
+FUN=function(x)
+which(x==TRUE))$encuesta_calidad.p_15
+Problem7<-apply(X=Locali1, MARGIN = 2,
+FUN=function(x)
+which(x==TRUE))$encuesta_calidad.p_20
+Problem8<-apply(X=Locali1, MARGIN = 2,
+FUN=function(x)
+which(x==TRUE))$encuesta_calidad.p_23
+# Todos los problemas:
+Problems<-Reduce(union,list(Problem1,Problem2,Problem3,
+Problem4,Problem5,Problem6,Problem7,Problem8))
+################  RESUMEN
+require(dplyr)
+# PREGUNTA 10:
+0/nrow(DAT_BARRIOS) # % PROBLEMA CON 10
+DAT_BARRIOS_10<-DAT_BARRIOS[,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_10")]
+TABLA_10<-round(100*as.matrix(table(DAT_BARRIOS_10))/rowSums(as.matrix(table(DAT_BARRIOS_10))),2)
+# PREGUNTA 87:
+length(Problem2)/nrow(DAT_BARRIOS) # % PROBLEMA CON 87
+DAT_BARRIOS_87<-DAT_BARRIOS[-Problem2,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_87")]
+RESUM_87<-DAT_BARRIOS_87 %>% group_by(encuesta_calidad.barrio) %>% summarise(Median_ingresos=round(median(encuesta_calidad.p_87)),2)
+class(RESUM_87)
+RESUM_87$Median_ingresos
+# PREGUNTA 146:
+0/nrow(DAT_BARRIOS) # % PROBLEMA CON 146
+DAT_BARRIOS_146<-DAT_BARRIOS[,c("encuesta_calidad.barrio",
+"encuesta_calidad.p_146")]
+TABLA_146<-round(100*as.matrix(table(DAT_BARRIOS_146))/rowSums(as.matrix(table(DAT_BARRIOS_146))),2)
+# PREGUNTA 12:
+0/nrow(DAT_BARRIOS) # % PROBLEMA CON 12
+DAT_BARRIOS_12<-DAT_BARRIOS[,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_12")]
+RESUM_12<-DAT_BARRIOS_12 %>% group_by(encuesta_calidad.barrio) %>% summarise(Median_personas=median(encuesta_calidad.p_12))
+class(RESUM_12)
+RESUM_12$Median_personas
+#PREGUNTA 232:
+length(Problem5)/nrow(DAT_BARRIOS) # % PROBLEMA CON 232
+DAT_BARRIOS_232<-DAT_BARRIOS[-Problem5,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_232")]
+RESUM_232<-DAT_BARRIOS_232 %>% group_by(encuesta_calidad.barrio) %>% summarise(Median_egresos=median(encuesta_calidad.p_232))
+class(RESUM_232)
+RESUM_232$Median_egresos
+# PREGUNTA 15:
+0/nrow(DAT_BARRIOS) # % PROBLEMA CON 15
+DAT_BARRIOS_15<-DAT_BARRIOS[,c("encuesta_calidad.barrio",
+"encuesta_calidad.p_15")]
+TABLA_15<-round(100*as.matrix(table(DAT_BARRIOS_15))/rowSums(as.matrix(table(DAT_BARRIOS_15))),2)
+# PREGUNTA 20:
+length(Problem7)/nrow(DAT_BARRIOS) # % PROBLEMA CON 20
+DAT_BARRIOS_20<-DAT_BARRIOS[-Problem7,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_20")]
+TABLA_20<-round(100*as.matrix(table(DAT_BARRIOS_20))/rowSums(as.matrix(table(DAT_BARRIOS_20))),2)
+# PREGUNTA 23:
+length(Problem8)/nrow(DAT_BARRIOS) # % PROBLEMA CON 23
+DAT_BARRIOS_23<-DAT_BARRIOS[-Problem8,
+c("encuesta_calidad.barrio",
+"encuesta_calidad.p_23")]
+TABLA_23<-round(100*as.matrix(table(DAT_BARRIOS_23))/rowSums(as.matrix(table(DAT_BARRIOS_23))),2)
+##############   CONSTRUYENDO EL DATA FRAME  #######
+BARRIOS1<-row.names(as.matrix(summary(DAT_BARRIOS$encuesta_calidad.barrio,
+maxsum=100000)))
+TOTAL_ENC<-as.vector(summary(DAT_BARRIOS$encuesta_calidad.barrio,
+maxsum=100000))
+DEMOGRAFIA<-data.frame(BARRIOS1,TOTAL_ENC,P.10.1=TABLA_10[,1], P.10.2=TABLA_10[,2], P.10.3=TABLA_10[,3], P.10.4=TABLA_10[,4],
+P.10.5=TABLA_10[,5],P.10.6=TABLA_10[,6], P.87=RESUM_87[,2], P.146.1=TABLA_146[,1],  P.146.2=TABLA_146[,2],
+P.146.3=TABLA_146[,3], P.146.4=TABLA_146[,4], P.146.5=TABLA_146[,5], P.232=RESUM_232[,2], p.12=RESUM_12[,2],
+P.15.1=TABLA_15[,1], P.15.2=TABLA_15[,2], P.20.1=TABLA_20[,2], P.20.2=TABLA_20[,3], P.20.3=TABLA_20[,4],
+P.20.4=TABLA_20[,5], P.20.5=TABLA_20[,6], P.20.6=TABLA_20[,7], P.23.1=TABLA_23[,3], P.23.2=TABLA_23[,4],
+P.23.3=TABLA_23[,5], P.23.4=TABLA_23[,6], P.23.5=TABLA_23[,7], P.23.6=TABLA_23[,8])
+##### ANALISIS DESCRIPTIVO
+#hist(DEMOGRAFIA$Median_ingresos)
+#hist(DEMOGRAFIA$Median_egresos)
+#boxplot(DEMOGRAFIA$P.10.2,DEMOGRAFIA$P.10.3)
+#plot(DEMOGRAFIA$P.146.1)
+require(readr)
+require(tidyr)
+require(ggplot2)
+#### agrupaciones
+dat_scal <- scale(DEMOGRAFIA[,3:30])
+dat_dist=dist(dat_scal)
+dat_clust=hclust(dat_dist,method="single")
+plot(dat_clust)
+library(FactoClass)
+library(ggplot2)
+library(factoextra)
+fviz_nbclust(x = na.omit(dat_scal),FUNcluster = kmeans, method = "silhouette") ## metodo del codo
+fviz_nbclust(x= na.omit(dat_scal), FUNcluster=kmeans, method = c("silhouette", "wss", "gap_stat"))
+library(NbClust)
+NbClust(data = na.omit(dat_scal), diss = NULL, distance = "euclidean",
+min.nc = 2, max.nc = 10, method = "kmeans")
+plot(dat_clust)
+rect.hclust(dat_clust,k=2)
+## despues de tener el k optimo que fue k=2, calculo kmeans
+set.seed(2020)
+km.res <- kmeans(na.omit(dat_scal), centers=2, nstart = 1)
+## grafico final de clusters
+fviz_cluster(km.res, na.omit(DEMOGRAFIA[,3:30]))
+## agregar una variable nueva con los grupos
+datosC <- data.frame(cbind(na.omit(DEMOGRAFIA), cluster = km.res$cluster))
+head(datosC)
+grupo1 <- datosC[datosC$cluster==1,]
+grupo2 <- datosC[datosC$cluster==2,]
+#grupo 1 - morado
+for(i in 1: nrow(datosC)){
+if(datosC$cluster[i]==1){datosC$COLOR[i] <- "#B562E9"}
+if(datosC$cluster[i]==2){datosC$COLOR[i] <- "#47B1FF"}}
+DATOS <- data.frame(datosC[,c(1,31,32)])
+names(DATOS)[1]="NOMBRE"
+DATOS[1:3,]
+DATOS$NOMBRE <- chartr('ÁÉÍÓÚ','AEIOU', DATOS$NOMBRE)
+DATOS[1:3,]
+### MAPA
+library(ggplot2)
+library(rgdal)
+library(sp)
+library(leaflet)
+setwd("C:/Users/susana/Downloads/medellin")
+unzip("C:/Users/susana/Downloads/medellin/Barrio_Vereda.zip")
+barrios_med=readOGR(dsn = "C:/Users/susana/Downloads/medellin", layer = "Barrio_Vereda" )
+print(barrios_med@data$NOMBRE)
+nombres_barrios<-iconv(barrios_med@data$NOMBRE,"UTF-8","ISO_8859-1")
+print(nombres_barrios)
+nombres_barrios=iconv(barrios_med@data$NOMBRE,"UTF-8","ISO_8859-1")
+library(stringr)
+barrios_med@data$NOMBRE  <- str_to_upper(nombres_barrios, locale = "es")
+barrios_med@data$NOMBRE <- chartr('ÁÉÍÓÚ','AEIOU', barrios_med@data$NOMBRE)
+#ordenar en orden del abecedario
+library(dplyr)
+#barrios_med@data$NOMBRE <- arrange(barrios_med@data, NOMBRE)
+DATOS <- arrange(DATOS, NOMBRE)
+#cambiando los nombres para que coincidan debe dar dim 297
+#PENDIENTE  PROGRESO N°.2
+DATOS$NOMBRE[DATOS$NOMBRE=="ALTAVISTA CENTRAL"]<- "ALTAVISTA SECTOR CENTRAL"
+DATOS$NOMBRE[DATOS$NOMBRE=="AREA DE EXPANCION SAN CRISTOBAL"]<- "AREA DE EXPANSION SAN CRISTOBAL"
+DATOS$NOMBRE[DATOS$NOMBRE=="AURES Nº 1"]<- "AURES NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="AURES Nº 2"]<- "AURES NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="BARRIO CAYCEDO"]<- "BARRIO CAICEDO"
+DATOS$NOMBRE[DATOS$NOMBRE=="BASILIA"]<- "BRASILIA"
+DATOS$NOMBRE[DATOS$NOMBRE=="BOMBONA Nº 1"]<- "BOMBONA NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="CALAZANS PARTE ALTA"]<- "CALASANZ PARTE ALTA"
+DATOS$NOMBRE[DATOS$NOMBRE=="CAMPO VALDES Nº 1"]<- "CAMPO VALDES NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="CARLOS E RESTREPO"]<- "CARLOS E. RESTREPO"
+DATOS$NOMBRE[DATOS$NOMBRE=="LA ASOMADERA Nº 1"]<- "ASOMADERA NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="MANRIQUE CENTRAL Nº 1"]<- "MANRIQUE CENTRAL NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="PROGRESO"]<- "EL PROGRESO"
+DATOS$NOMBRE[DATOS$NOMBRE=="SAN JAVIER Nº 1"]<- "SAN JAVIER NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="SAN JAVIER Nº 2"]<- "SAN JAVIER NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="JUAN XXIII - LA QUIEBRA"]<- "JUAN XXIII LA QUIEBRA"
+DATOS$NOMBRE[DATOS$NOMBRE=="LA ESPERANZA Nº 2"]<- "LA ESPERANZA NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="MARIA CANO - CARAMBOLAS"]<- "MARIA CANO-CARAMBOLAS"
+DATOS$NOMBRE[DATOS$NOMBRE=="CAMPO VALDES Nº 2"]<- "CAMPO VALDES NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="DOCE DE OCTUBRE Nº 1"]<- "DOCE DE OCTUBRE NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="DOCE DE OCTUBRE Nº 2"]<- "DOCE DE OCTUBRE NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="EL DIAMANTE Nº 2"]<- "EL DIAMANTE NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="EL NOGAL - LOS ALMENDROS"]<- "EL NOGAL-LOS ALMENDROS"
+DATOS$NOMBRE[DATOS$NOMBRE=="EL PLAYON DE LOS COMUNEROS"]<- "PLAYON DE LOS COMUNEROS"
+DATOS$NOMBRE[DATOS$NOMBRE=="EL SOCORRO / LA GABRIELA"]<- "EL SOCORRO"
+DATOS$NOMBRE[DATOS$NOMBRE=="LA ASOMADERA Nº 2"]<- "ASOMADERA NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="LA ASOMADERA Nº 3"]<- "ASOMADERA NO.3"
+DATOS$NOMBRE[DATOS$NOMBRE=="LAS LOMAS Nº 1"]<- "LAS LOMAS NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="LAS LOMAS Nº 2"]<- "LAS LOMAS NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="LOS BALSOS Nº 1"]<- "LOS BALSOS NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="LOS BALSOS Nº 2"]<- "LOS BALSOS NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="MANRIQUE CENTRAL Nº 2"]<- "MANRIQUE CENTRAL NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="MOSCU Nº 1"]<- "MOSCU NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="MOSCU Nº 2"]<- "MOSCU NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="SAN JOSELA CIMA Nº 1"]<- "SAN JOSE LA CIMA NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="SAN JOSE LA CIMA Nº 2"]<- "SAN JOSE LA CIMA NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="SANTO DOMINGO SABIO Nº 1"]<- "SANTO DOMINGO SAVIO NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="SANTO DOMINGO SABIO Nº 2"]<- "SANTO DOMINGO SAVIO NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="VERSALLES Nº 1"]<- "VERSALLES NO.1"
+DATOS$NOMBRE[DATOS$NOMBRE=="VERSALLES Nº 2"]<- "VERSALLES NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="BARRIO FACULTAD DE MINAS"]<- "FACULTAD DE MINAS"
+DATOS$NOMBRE[DATOS$NOMBRE=="BERMEJAL- LOS ALAMOS"]<- "BERMEJAL-LOS ALAMOS"
+DATOS$NOMBRE[DATOS$NOMBRE=="BOMBONA Nº 2"]<- "BOMBONA NO.2"
+DATOS$NOMBRE[DATOS$NOMBRE=="CABECERA SAN ANT DE PR."]<- "SAN ANTONIO DE PRADO"
+DATOS$NOMBRE[DATOS$NOMBRE=="CERRO EL VOLADOR"]<- "B. CERRO EL VOLADOR"
+DATOS$NOMBRE[DATOS$NOMBRE=="CORREGIMIENTO PALMITAS"]<- "PALMITAS SECTOR CENTRAL"
+DATOS$NOMBRE[DATOS$NOMBRE=="NUEVA VILLA DE ABURRA"]<- "NUEVA VILLA DEL ABURRA"
+DATOS$NOMBRE[DATOS$NOMBRE=="EL YOLOMBO"]<- "YOLOMBO"
+DATOS$NOMBRE[DATOS$NOMBRE=="VILLA TINA"]<- "VILLATINA"
+DATOS$NOMBRE[DATOS$NOMBRE=="VILLA LILIAM"]<- "VILLA LILLIAM"
+DATOS$NOMBRE[DATOS$NOMBRE=="CABECERA SAN CRISTOBAL"]<- "CABECERA URBANA CORREGIMIENTO SAN CRISTOBAL"
+DATOS$NOMBRE[DATOS$NOMBRE=="MIRA FLORES"]<- "MIRAFLORES"
+dim(merge(x = DATOS, y = barrios_med@data , by = "NOMBRE"))
+#-------  PONER UNA COLUMNA DE COLORES EN LA METADATA------------------
+barrios_med@data$COLOR<-rep("white",332)
+for (i in 1:332) {
+for (j in 1:299) {
+if(barrios_med@data$NOMBRE[i]==DATOS$NOMBRE[j]){
+barrios_med@data$COLOR[i] <- DATOS$COLOR[j]
+}
+}
+}
+#------------------------- CREACION DEL MAPA ---------------------
+library(rgdal)
+library(leaflet)
+m=leaflet(barrios_med)
+m=addTiles(m)
+m
+#colores=sample(x=c("orange","green","yellow"),size=length(nombres_barrios),replace=TRUE)
+m=addPolygons(m,popup=nombres_barrios,color=barrios_med@data$COLOR)
+m
+###SCORE
+GRUPO_1<-data.frame(P.10.1=(grupo1$P.10.1)*(-1), P.10.2=(grupo1$P.10.2)*(-1), P.10.3=grupo1$P.10.3, P.10.4=grupo1$P.10.4,
+P.10.5=grupo1$P.10.5,P.10.6=grupo1$P.10.6, P.87=scale(grupo1$Median_ingresos), P.146.1=(grupo1$P.146.1)*(-1),
+P.146.2=(grupo1$P.146.2)*(-1), P.146.3=(grupo1$P.146.3)*(-1), P.146.4=grupo1$P.146.4, P.146.5=grupo1$P.146.5,
+P.232=scale(grupo1$Median_egresos), p.12=scale(grupo1$Median_personas), P.15.1=grupo1$P.15.1, P.15.2=grupo1$P.15.2,
+P.20.1=grupo1$P.20.1, P.20.2=grupo1$P.20.2, P.20.3=grupo1$P.20.3, P.20.4=grupo1$P.20.4,
+P.20.5=grupo1$P.20.5, P.20.6=grupo1$P.20.6, P.23.1=grupo1$P.23.1, P.23.2=grupo1$P.23.2,
+P.23.3=grupo1$P.23.3, P.23.4=grupo1$P.23.4, P.23.5=grupo1$P.23.5, P.23.6=grupo1$P.23.6)
+apply(GRUPO_1,2,mean)
+sum(apply(GRUPO_1,2,mean))/31
+GRUPO_2<-data.frame(P.10.1=(grupo2$P.10.1)*(-1), P.10.2=(grupo2$P.10.2)*(-1), P.10.3=grupo2$P.10.3, P.10.4=grupo2$P.10.4,
+P.10.5=grupo2$P.10.5,P.10.6=grupo2$P.10.6, P.87=scale(grupo2$Median_ingresos), P.146.1=(grupo2$P.146.1)*(-1),
+P.146.2=(grupo2$P.146.2)*(-1), P.146.3=(grupo2$P.146.3)*(-1), P.146.4=grupo2$P.146.4, P.146.5=grupo2$P.146.5,
+P.232=scale(grupo2$Median_egresos), p.12=scale(grupo2$Median_personas), P.15.1=grupo2$P.15.1, P.15.2=grupo2$P.15.2,
+P.20.1=grupo2$P.20.1, P.20.2=grupo2$P.20.2, P.20.3=grupo2$P.20.3, P.20.4=grupo2$P.20.4,
+P.20.5=grupo2$P.20.5, P.20.6=grupo2$P.20.6, P.23.1=grupo2$P.23.1, P.23.2=grupo2$P.23.2,
+P.23.3=grupo2$P.23.3, P.23.4=grupo2$P.23.4, P.23.5=grupo2$P.23.5, P.23.6=grupo2$P.23.6)
+apply(GRUPO_2,2,mean)
+sum(apply(GRUPO_2,2,mean))/31
+summary(GRUPO_1)
+summary(grupo1)
+dim(grupo1)
+summary(grupo2)
+dim(grupo2)
+fviz_nbclust(x = na.omit(dat_scal),FUNcluster = kmeans, method = "silhouette") ## metodo del codo
+fviz_nbclust(x= na.omit(dat_scal), FUNcluster=kmeans, method = c("silhouette", "wss", "gap_stat"))
+apply(GRUPO_2,2,mean)
+summary(grupo1)
+colMeans(grupo1)
+View(grupo1)
+colMeans(grupo1[3:30,])
+colMeans(grupo1[,3:30])
+summary(grupo2)
+dim(grupo2)
+apply(GRUPO_1,2,mean)
+sum(apply(GRUPO_1,2,mean))/30
+apply(GRUPO_2,2,mean)
+sum(apply(GRUPO_2,2,mean))/30
